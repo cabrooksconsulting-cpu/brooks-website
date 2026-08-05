@@ -610,27 +610,7 @@
   <div class="section__inner">
     <div class="contact__inner">
 
-      <div class="contact__info">
-        <p class="section__label">Let's Connect</p>
-        <h2 class="section__title">Get in Touch</h2>
-        <div class="divider"></div>
-        <h3>Ready to take the first step?</h3>
-        <p>
-          Fill out the form and I'll get back to you within one business day.
-          I offer a free 15-minute phone consultation to discuss your needs.
-        </p>
-        <h3>Prefer email?</h3>
-        <p>
-          Reach me directly at<br/>
-          <!-- Replace with real email -->
-          <a href="mailto:carla@brookscommunicationconsulting.com">carla@brookscommunicationconsulting.com</a>
-        </p>
-        <h3>Location</h3>
-        <p>
-          Serving clients in-person and virtually.<br/>
-          <!-- Add your location if desired -->
-        </p>
-      </div>
+      <div class="contact__info" id="contactInfo"></div>
 
       <div>
         <!--
@@ -805,7 +785,42 @@
     document.getElementById('testimonialsGrid').innerHTML = html;
   }
 
-  [loadHeader, loadServices, loadAbout, loadTestimonials].forEach((fn) => {
+  // Turn bare email addresses and phone numbers into clickable links.
+  const linkify = (s) => s
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, (m) => `<a href="mailto:${m}">${m}</a>`)
+    .replace(/(?:\(\d{3}\)\s*|\b\d{3}[-.\s])\d{3}[-.\s]?\d{4}\b/g,
+      (m) => `<a href="tel:${m.replace(/\D/g, '')}">${m}</a>`);
+
+  // Within a block, a blank line starts a new paragraph and a single
+  // newline is a line break.
+  const richText = (s) => s
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p>${linkify(escapeHtml(p)).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+
+  async function loadContact() {
+    const text = await fetchText('contact.txt');
+    const parts = splitRecords(text);
+    const [label, title] = (parts[0] || '').split('|').map((s) => s.trim());
+    const blocks = parts.slice(1).map((block) => {
+      const lines = block.split('\n');
+      const heading = (lines.shift() || '').trim();
+      return `
+        <h3>${escapeHtml(heading)}</h3>
+        ${richText(lines.join('\n'))}
+      `;
+    }).join('');
+    document.getElementById('contactInfo').innerHTML = `
+      <p class="section__label">${escapeHtml(label || '')}</p>
+      <h2 class="section__title">${escapeHtml(title || '')}</h2>
+      <div class="divider"></div>
+      ${blocks}
+    `;
+  }
+
+  [loadHeader, loadServices, loadAbout, loadTestimonials, loadContact].forEach((fn) => {
     fn().catch((err) => console.error(err));
   });
 
