@@ -209,17 +209,35 @@
 
     .hero__photo {
       flex-shrink: 0;
-      width: 320px;
+      width: 420px;
     }
 
     .hero__photo img {
       width: 100%;
-      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
-      border: 6px solid var(--white);
+      border: 8px solid var(--white);
       outline: 3px solid var(--gold-light);
-      outline-offset: 4px;
+      outline-offset: 5px;
     }
+
+    /* Artwork credit line beneath the hero image */
+    .hero__credit {
+      margin-top: 1.25rem;
+      text-align: center;
+      font-size: .8rem;
+      letter-spacing: .04em;
+      color: var(--text-light);
+    }
+
+    .hero__credit a {
+      color: var(--brown);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color var(--transition);
+    }
+
+    .hero__credit a:hover { color: var(--brown-dark); }
 
     /* ─── Section base ──────────────────────────────────────────── */
     .section {
@@ -508,7 +526,7 @@
     /* ─── Responsive ────────────────────────────────────────────── */
     @media (max-width: 900px) {
       .hero__inner { flex-direction: column-reverse; text-align: center; gap: 2.5rem; }
-      .hero__photo { width: 220px; }
+      .hero__photo { width: 100%; max-width: 360px; }
       .hero__subtitle { margin-left: auto; margin-right: auto; }
       .hero__actions { justify-content: center; }
 
@@ -560,9 +578,10 @@
         <a href="#services" class="btn btn--outline">Our Services</a>
       </div>
     </div>
-    <div class="hero__photo">
-      <img src="carla-headshot.png" alt="Carla Brooks, Speech-Language Pathologist" />
-    </div>
+    <figure class="hero__photo">
+      <img src="door-painting.png" alt="Lavender Cottage — a watercolor painting of a weathered purple cottage door framed by climbing ivy, flowers, and a garden bench" />
+      <figcaption class="hero__credit" id="heroCredit"></figcaption>
+    </figure>
   </div>
 </section>
 
@@ -729,6 +748,17 @@
         el.textContent = val;
       }
     });
+
+    // Artwork credit beneath the hero image — "caption: Text | https://url"
+    const creditEl = document.getElementById('heroCredit');
+    const [creditText, creditUrl] = (fields.caption || '')
+      .split('|').map((s) => s.trim());
+    if (creditEl) {
+      creditEl.innerHTML = !creditText ? ''
+        : creditUrl
+          ? `<a href="${escapeHtml(creditUrl)}" target="_blank" rel="noopener">${escapeHtml(creditText)}</a>`
+          : escapeHtml(creditText);
+    }
   }
 
   async function loadServices() {
