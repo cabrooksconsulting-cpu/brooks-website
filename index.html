@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Brooks Communication Consulting</title>
-  <meta name="description" content="Speech therapy, consulting, and English language coaching for non-native learners. Opening doors to communication." />
+  <!-- Search engines read this from the HTML, so it is not loaded from a
+       .txt file. Update it here if the services change. -->
+  <meta name="description" content="Speech and language therapy and accent management for non-native English speakers, from school-aged children through adulthood. Licensed speech-language pathologist serving clients in person and virtually." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
   <!-- Fonts -->
@@ -670,12 +672,9 @@
 
           <div class="form__group">
             <label class="form__label" for="service">I'm interested in</label>
+            <!-- Options are filled in from services.txt by loadServices() -->
             <select class="form__select" id="service" name="service">
               <option value="">— Select a service —</option>
-              <option value="speech-therapy">Speech Therapy</option>
-              <option value="consulting">Consulting</option>
-              <option value="english-coaching">English for Non-Native Speakers</option>
-              <option value="other">Other / Not sure yet</option>
             </select>
           </div>
 
@@ -763,19 +762,32 @@
 
   async function loadServices() {
     const text = await fetchText('services.txt');
-    const html = splitRecords(text).map((record) => {
+    const services = splitRecords(text).map((record) => {
       const lines = record.split('\n');
       const [icon, title] = (lines.shift() || '').split('|').map((s) => s.trim());
-      const body = lines.join(' ').trim();
-      return `
+      return { icon: icon || '', title: title || '', body: lines.join(' ').trim() };
+    });
+
+    document.getElementById('servicesGrid').innerHTML = services.map((s) => `
         <div class="service-card">
-          <div class="service-card__icon" aria-hidden="true">${escapeHtml(icon || '')}</div>
-          <h3 class="service-card__title">${escapeHtml(title || '')}</h3>
-          <p class="service-card__body">${escapeHtml(body)}</p>
+          <div class="service-card__icon" aria-hidden="true">${escapeHtml(s.icon)}</div>
+          <h3 class="service-card__title">${escapeHtml(s.title)}</h3>
+          <p class="service-card__body">${escapeHtml(s.body)}</p>
         </div>
-      `;
-    }).join('');
-    document.getElementById('servicesGrid').innerHTML = html;
+      `).join('');
+
+    // Keep the contact form's dropdown in sync with the services above.
+    // The submitted value is the service name itself, so the notification
+    // email reads plainly.
+    const select = document.getElementById('service');
+    if (select) {
+      select.innerHTML = [
+        '<option value="">— Select a service —</option>',
+        ...services.map((s) =>
+          `<option value="${escapeHtml(s.title)}">${escapeHtml(s.title)}</option>`),
+        '<option value="Other / Not sure yet">Other / Not sure yet</option>',
+      ].join('');
+    }
   }
 
   async function loadAbout() {
