@@ -749,14 +749,28 @@
     });
 
     // Artwork credit beneath the hero image — "caption: Text | https://url"
+    // Square brackets mark the part that becomes the link, as in
+    // "Fine art by [Pomm]". With no brackets the whole caption links.
     const creditEl = document.getElementById('heroCredit');
     const [creditText, creditUrl] = (fields.caption || '')
       .split('|').map((s) => s.trim());
     if (creditEl) {
-      creditEl.innerHTML = !creditText ? ''
-        : creditUrl
-          ? `<a href="${escapeHtml(creditUrl)}" target="_blank" rel="noopener">${escapeHtml(creditText)}</a>`
-          : escapeHtml(creditText);
+      const link = (label) =>
+        `<a href="${escapeHtml(creditUrl)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
+      if (!creditText) {
+        creditEl.innerHTML = '';
+      } else if (!creditUrl) {
+        creditEl.innerHTML = escapeHtml(creditText.replace(/[[\]]/g, ''));
+      } else if (/\[[^\]]+\]/.test(creditText)) {
+        creditEl.innerHTML = creditText
+          .split(/(\[[^\]]+\])/)
+          .map((part) => (/^\[[^\]]+\]$/.test(part)
+            ? link(part.slice(1, -1))
+            : escapeHtml(part)))
+          .join('');
+      } else {
+        creditEl.innerHTML = link(creditText);
+      }
     }
   }
 
